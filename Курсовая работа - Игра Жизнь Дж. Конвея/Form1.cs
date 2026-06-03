@@ -22,8 +22,14 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         int countIndivid = 0; //Количество особей
         int x = 0; //Значении ширины мира по умолчанию
         int y = 0; //Значении высоты мира по умолчанию
-        private List<PointF> points; // Список точек для графика
-        private int pointCounter = 0; // Счетчик добавленных точек
+        int numBirths = 0; //Количество родившихся особей
+        int numDeaths = 0; //Количество вымерших особей
+        // Для хранения истории
+        List<int> liveCellsHistory = new List<int>();
+        List<int> birthsCellsHistory = new List<int>();
+        List<int> deathsCellsHistory = new List<int>();
+        List<int> generationHistory = new List<int>();
+        int maxHistoryPoints = 100; // Ограничиваем историю
 
         public Form1()
         {
@@ -33,7 +39,65 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
             textBox4.Text = "0"; //Значение по умолчанию для поля "Количество живых клеток"
             textBox3.Text = "0"; //Значение по умолчанию для поля "Количество поколений"
             textBox7.Text = "0"; //Значение по умолчанию для поля "Поколение N№"
-            points = new List<PointF>(); // Инициализация списка точек
+            // Очищаем стандартные серии
+            chart1.Series.Clear();
+            chart2.Series.Clear();
+            chart3.Series.Clear();
+            // Создаём серию для живых клеток
+            Series liveSeries = new Series("Живые клетки");
+            liveSeries.ChartType = SeriesChartType.Line;
+            liveSeries.Color = Color.Green;
+            liveSeries.BorderWidth = 2;
+            liveSeries.MarkerStyle = MarkerStyle.Circle;
+            liveSeries.MarkerSize = 5;
+            // Создаём серию для родившихся клеток клеток
+            Series birthsSeries = new Series("Родившиеся клетки");
+            birthsSeries.ChartType = SeriesChartType.Line;
+            birthsSeries.Color = Color.Red;
+            birthsSeries.BorderWidth = 2;
+            birthsSeries.MarkerStyle = MarkerStyle.Circle;
+            birthsSeries.MarkerSize = 5;
+            // Создаём серию для вымерших клеток
+            Series deathsSeries = new Series("Вымершие клетки");
+            deathsSeries.ChartType = SeriesChartType.Line;
+            deathsSeries.Color = Color.Black;
+            deathsSeries.BorderWidth = 2;
+            deathsSeries.MarkerStyle = MarkerStyle.Circle;
+            deathsSeries.MarkerSize = 5;
+            //Добавляем серии в коллекцию
+            chart1.Series.Add(liveSeries);
+            chart2.Series.Add(birthsSeries);
+            chart3.Series.Add(deathsSeries);
+            // Настройка осей для графика живых клеток
+            chart1.ChartAreas[0].AxisX.Title = "Поколение";
+            chart1.ChartAreas[0].AxisY.Title = "Кол-во живых клеток";
+            chart1.ChartAreas[0].AxisX.Minimum = 0;
+            chart1.ChartAreas[0].AxisY.Minimum = 0;
+            // Настройка осей для графика родившихся клеток
+            chart2.ChartAreas[0].AxisX.Title = "Поколение";
+            chart2.ChartAreas[0].AxisY.Title = "Кол-во родившихся клеток";
+            chart2.ChartAreas[0].AxisX.Minimum = 0;
+            chart2.ChartAreas[0].AxisY.Minimum = 0;
+            // Настройка осей для графика вымерших клеток
+            chart3.ChartAreas[0].AxisX.Title = "Поколение";
+            chart3.ChartAreas[0].AxisY.Title = "Кол-во вымерших клеток";
+            chart3.ChartAreas[0].AxisX.Minimum = 0;
+            chart3.ChartAreas[0].AxisY.Minimum = 0;
+            //chart1.ChartAreas[0].AxisY.Maximum = x * y;
+            // Легенда
+            //chart1.Legends[0].Docking = Docking.Bottom;
+            // Заголовок для графика живых клеток
+            chart1.Titles.Clear();
+            Title liveTitle = new Title("Динамика численности популяции");
+            chart1.Titles.Add(liveTitle);
+            // Заголовок для графика родившихся клеток
+            chart2.Titles.Clear();
+            Title birthsTitle = new Title("Динамика рождаемости популяции");
+            chart2.Titles.Add(birthsTitle);
+            // Заголовок для графика вымерших клеток
+            chart3.Titles.Clear();
+            Title deathsTitle = new Title("Динамика смертности популяции");
+            chart3.Titles.Add(deathsTitle);
         }
 
         //Кнопка "Создать мир"
@@ -91,14 +155,16 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         //Действия, происходящие при нажатии мышью на клетку мира
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            x = e.ColumnIndex;
+            y = e.RowIndex;
             //Если клетка не зелёная, то она красится в зелёный и её значение в массиве становится живым(True), а также прибавляется кол-во живых клеток
-            if (dataGridView1[e.ColumnIndex, e.RowIndex].Style.BackColor != Color.Green)
+            if (dataGridView1[x, y].Style.BackColor != Color.Green)
             {
                 countIndivid = int.Parse(textBox4.Text);
                 countIndivid++;
                 textBox4.Text = countIndivid.ToString();
-                dataGridView1[e.ColumnIndex, e.RowIndex].Style.BackColor = Color.Green;
-                today[e.RowIndex, e.ColumnIndex] = true;
+                dataGridView1[x, y].Style.BackColor = Color.Green;
+                today[x, y] = true;
             }
             //Иначе клетка красится в белый и её значение в массиве становится мёртвым(False), а также обовляется кол-во живых клеток
             else
@@ -106,8 +172,8 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
                 countIndivid = int.Parse(textBox4.Text);
                 countIndivid--;
                 textBox4.Text = countIndivid.ToString();
-                dataGridView1[e.ColumnIndex, e.RowIndex].Style.BackColor = Color.White;
-                today[e.RowIndex, e.ColumnIndex] = false;
+                dataGridView1[x, y].Style.BackColor = Color.White;
+                today[x, y] = false;
             }
              //Функция чтобы выделенная клетка не подсвечивалась синим
              dataGridView1.ClearSelection();
@@ -135,6 +201,22 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
             generalCountIndivid = 0; //Обнуляет общее число особей за весь период
             textBox6.Text = "0"; //Обнуляет значение для поля "Среднее количество особей за весь период"
             averageCountIndivid = 0; //Обнуляет среднее количество особей за весь период
+            numBirths = 0; //Обнуляется количество родившихся особей
+            numDeaths = 0; //Обнуляется количество вымерших особей
+            // Очищаем серию и добавляем все точки заново
+            Series liveSeries = chart1.Series["Живые клетки"];
+            liveSeries.Points.Clear();
+            // Очищаем серию и добавляем все точки заново
+            Series birthsSeries = chart2.Series["Родившиеся клетки"];
+            birthsSeries.Points.Clear();
+            // Очищаем серию и добавляем все точки заново
+            Series deathsSeries = chart3.Series["Вымершие клетки"];
+            deathsSeries.Points.Clear();
+            //Очищаем историю
+            liveCellsHistory.Clear();
+            birthsCellsHistory.Clear();
+            deathsCellsHistory.Clear();
+            generationHistory.Clear();
         }
 
         //Кнопка "Расставить автоматически"
@@ -143,7 +225,7 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
             int x = int.Parse(textBox1.Text);
             int y = int.Parse(textBox2.Text);
             int i, j;
-            int countIndivid = int.Parse(textBox4.Text); //Берёт кол-во особей из пользовательского поля
+            countIndivid = int.Parse(textBox4.Text); //Берёт кол-во особей из пользовательского поля
             Random rnd = new Random();
             //Цикл, убивающий живые клетки и перекрашивающий их в белый
             for ( i = 0; i < x; i++)
@@ -172,14 +254,23 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         private void button3_Click(object sender, EventArgs e)
         {
             int countGen = int.Parse(textBox3.Text); //Считывается кол-во поколений из поля "Количество поколений"
+            int x = int.Parse(textBox1.Text);//Считывает значение ширины с пользовательского поля
+            int y = int.Parse(textBox2.Text); //Считывает значение высоты с пользовательского поля
+            int countInd = int.Parse(textBox4.Text); //Считывается кол-во живых клеток из поля "Количество живых клеток"
+            //Предупреждение о том, что мир ещё не создан
+            if (dataGridView1.ColumnCount==0 || dataGridView1.RowCount==0) MessageBox.Show("Сначала создайте мир!");
+            //Предупреждение о том, что не все поля заполнены и программа не может начать работу
+            else if (countGen == 0 || x == 0 || y == 0 || countInd == 0) MessageBox.Show("Заполните все пользовательские поля!");
+            //Предупреждение о том, что на поле нет ни одной живой клетки
+            else if (countIndivid==0) MessageBox.Show("Установите хотябы одну живую клетку!");
             //Предупреждение о превышении максимального числа поколений и установка числа поколений на максимально допустимое значение
-            if (countGen > 100)
-            {
-                MessageBox.Show("Ограничение числа поколений 100!");
-                countGen = 100;
-                textBox3.Text = "100";
-            }
-            timer1.Start(); //Запускает таймер
+            else if (countGen > 100)
+                {
+                    MessageBox.Show("Ограничение числа поколений 100!");
+                    countGen = 100;
+                    textBox3.Text = "100";
+                }
+             else timer1.Start(); //Запускает таймер
         }
 
         //Действия, происходящие при каждом тике таймера
@@ -206,9 +297,11 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
                         if (today[i + 1, j - 1]) numNeigbours++; //Слева-Снизу
                         if (today[i + 1, j]) numNeigbours++; //Снизу
                         if (today[i + 1, j + 1]) numNeigbours++; //Справа-Снизу
-                        bool keepAlive = isAlive && (numNeigbours == 2 || numNeigbours == 3); //Проверка на то, что живая клетка останется живой
+                        bool keepAlive = isAlive && (numNeigbours == 2 || numNeigbours == 3); //Проверка на то, что живая клетка останется живой    
                         bool makeNewLive = !isAlive && numNeigbours == 3; //Проверка на то, что мёртвая клетка станет живой
                         nextDay[i, j] = keepAlive || makeNewLive; //Запись значения клетки в массив следующего поколения
+                        if (makeNewLive) numBirths++; //Подсчёт кол-ва родившихся особей
+                        if (today[i, j] && !nextDay[i, j]) numDeaths++; //Подсчёт кол-ва вымерших особей
                         //Перекрашивание клеток в зависимости от её состояния в новом поколении
                         if (nextDay[i, j])
                         {
@@ -245,27 +338,53 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
                 textBox7.Text = numGen.ToString(); //В поле "Поколение N№" записывается актуальное значение
                 averageCountIndivid = generalCountIndivid / numGen; //Высчитывается среднее количество особей за весь период
                 textBox6.Text = averageCountIndivid.ToString(); //В поле "Среднее количество особей за весь период" записывается актуальное значение
-                int count = countGen+1;
-                double[] CartX = new double[count];
-                double[] ChartYPop = new double[count];
-                double[] ChartYBrate = new double[count];
-                double[] ChartYMrate = new double[count];
-                for (int i = 0; i < count; i++)
+                // Добавляем в историю
+                liveCellsHistory.Add(countIndivid);
+                birthsCellsHistory.Add(numBirths);
+                deathsCellsHistory.Add(numDeaths);
+                generationHistory.Add(numGen);
+                // Ограничиваем количество точек для производительности
+                if (liveCellsHistory.Count > maxHistoryPoints)
                 {
-
-                    CartX[i] = 0 + 1 * i;
-                    ChartYPop[i] = countIndivid;
+                    liveCellsHistory.RemoveAt(0);
+                    generationHistory.RemoveAt(0);
                 }
-                //chart1.Series[0].Points.Add(new PointF(pointCounter, rnd.Next(100)));
-                //pointCounter++;
-                //chart1.Series.Points.AddY(rnd.Next(100));
-                
-                chart1.ChartAreas[0].AxisX.Minimum = 0;
-                chart1.ChartAreas[0].AxisX.Maximum = countGen;
-                chart1.ChartAreas[0].AxisX.MajorGrid.Interval = 1;
-                chart1.Series[0].Points.DataBindXY(CartX, ChartYPop);
-                chart1.Series[0].Points.Add(countGen, countIndivid);
-                Invalidate();// Перерисовка графика
+                // Ограничиваем количество точек для производительности
+                if (birthsCellsHistory.Count > maxHistoryPoints)
+                {
+                    birthsCellsHistory.RemoveAt(0);
+                    generationHistory.RemoveAt(0);
+                }
+                // Ограничиваем количество точек для производительности
+                if (deathsCellsHistory.Count > maxHistoryPoints)
+                {
+                    deathsCellsHistory.RemoveAt(0);
+                    generationHistory.RemoveAt(0);
+                }
+                // Очищаем серию и добавляем все точки заново
+                Series liveSeries = chart1.Series["Живые клетки"];
+                liveSeries.Points.Clear();
+
+                for (int i = 0; i < generationHistory.Count; i++)
+                {
+                    liveSeries.Points.AddXY(generationHistory[i], liveCellsHistory[i]);
+                }
+                // Очищаем серию и добавляем все точки заново
+                Series birthsSeries = chart2.Series["Родившиеся клетки"];
+                birthsSeries.Points.Clear();
+
+                for (int i = 0; i < generationHistory.Count; i++)
+                {
+                    birthsSeries.Points.AddXY(generationHistory[i], birthsCellsHistory[i]);
+                }
+                // Очищаем серию и добавляем все точки заново
+                Series deathsSeries = chart3.Series["Вымершие клетки"];
+                deathsSeries.Points.Clear();
+
+                for (int i = 0; i < generationHistory.Count; i++)
+                {
+                    deathsSeries.Points.AddXY(generationHistory[i], deathsCellsHistory[i]);
+                }
             }
             //Иначе останавливает таймер
             else timer1.Stop();
@@ -321,50 +440,5 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         {
             e.KeyChar = (char)0;//Зпрет на ввод любых символов
         }
-
-        private void textBox6_TextChanged(object sender, EventArgs e)
-        {
-           
-        }
-
-        private void textBox5_TextChanged(object sender, EventArgs e)
-        {
-            
-        }
-        
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox3_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-        private void textBox4_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-        private void textBox3_Click(object sender, EventArgs e)
-        {
-            
-        }
-
-        
     }
 }
