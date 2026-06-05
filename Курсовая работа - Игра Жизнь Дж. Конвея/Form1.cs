@@ -226,28 +226,37 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
             int y = int.Parse(textBox2.Text);
             int i, j;
             countIndivid = int.Parse(textBox4.Text); //Берёт кол-во особей из пользовательского поля
-            Random rnd = new Random();
-            //Цикл, убивающий живые клетки и перекрашивающий их в белый
-            for ( i = 0; i < x; i++)
+            if (countIndivid > x * y)
             {
-                for ( j = 0; j < y; j++)
+                MessageBox.Show("Ограничение числа живых клеток " + x * y + "!");
+                textBox4.Text = ""+x*y;
+                countIndivid = x * y;
+            }
+            else
+            {
+                Random rnd = new Random();
+                //Цикл, убивающий живые клетки и перекрашивающий их в белый
+                for (i = 0; i < x; i++)
                 {
-                    if (today[i, j])
+                    for (j = 0; j < y; j++)
                     {
-                        today[i, j] = false;
-                        dataGridView1[i, j].Style.BackColor = Color.White;
+                        if (today[i, j])
+                        {
+                            today[i, j] = false;
+                            dataGridView1[i, j].Style.BackColor = Color.White;
+                        }
                     }
                 }
+                //Цикл, заполняющий поле живыми клетками в случайных местах
+                for (i = 0; i < countIndivid; i++)
+                {
+                    int Rx = rnd.Next(0, x); //Генерация случейного значения по X
+                    int Ry = rnd.Next(0, y); //Генерация случейного значения по Y
+                    today[Rx, Ry] = true;
+                    dataGridView1[Rx, Ry].Style.BackColor = Color.Green;
+                }
+                //textBox4.Text = countIndivid.ToString(); //Обновление данных о кол-ве особей
             }
-            //Цикл, заполняющий поле живыми клетками в случайных местах
-            for ( i = 0; i < countIndivid; i++)
-            {
-                int Rx = rnd.Next(0, x); //Генерация случейного значения по X
-                int Ry = rnd.Next(0, y); //Генерация случейного значения по Y
-                today[Rx, Ry] = true;
-                dataGridView1[Rx, Ry].Style.BackColor = Color.Green;
-            }
-            //textBox4.Text = countIndivid.ToString(); //Обновление данных о кол-ве особей
         }
 
         //Кнопка "Старт"
