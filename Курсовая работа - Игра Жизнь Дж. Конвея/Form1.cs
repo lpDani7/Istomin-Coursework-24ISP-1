@@ -226,15 +226,23 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
             int y = int.Parse(textBox2.Text);
             int i, j;
             countIndivid = int.Parse(textBox4.Text); //Берёт кол-во особей из пользовательского поля
-            if (countIndivid > x * y)
+            int maxCell = x * y;
+            //Предупреждение о том, что мир ещё не создан
+            if (dataGridView1.ColumnCount == 0 || dataGridView1.RowCount == 0) MessageBox.Show("Сначала создайте мир!");
+            else if (countIndivid > maxCell)
             {
                 MessageBox.Show("Ограничение числа живых клеток " + x * y + "!");
-                textBox4.Text = ""+x*y;
-                countIndivid = x * y;
+                textBox4.Text = ""+maxCell;
+                countIndivid = maxCell;
             }
+            else if (countIndivid == 0) MessageBox.Show("Невозможно расставить 0 клеток!");
+            // Алгоритм очистки поля и расстановки клеток
             else
             {
                 Random rnd = new Random();
+                int placed = 0; // Счётчик кол-ва заполненых клеток
+                int attempts = 0; // Кол-во попыток на заполнение без повторений
+                int maxAttempts = maxCell * 8; // Защита от бесконечного цикла
                 //Цикл, убивающий живые клетки и перекрашивающий их в белый
                 for (i = 0; i < x; i++)
                 {
@@ -248,14 +256,19 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
                     }
                 }
                 //Цикл, заполняющий поле живыми клетками в случайных местах
-                for (i = 0; i < countIndivid; i++)
+                while (placed < countIndivid && attempts < maxAttempts)
                 {
-                    int Rx = rnd.Next(0, x); //Генерация случейного значения по X
-                    int Ry = rnd.Next(0, y); //Генерация случейного значения по Y
-                    today[Rx, Ry] = true;
-                    dataGridView1[Rx, Ry].Style.BackColor = Color.Green;
+                    int Rx = rnd.Next(0, x);
+                    int Ry = rnd.Next(0, y);
+
+                    if (!today[Rx, Ry])
+                    {
+                        today[Rx, Ry] = true;
+                        dataGridView1[Rx, Ry].Style.BackColor = Color.Green;
+                        placed++;
+                    }
+                    attempts++;
                 }
-                //textBox4.Text = countIndivid.ToString(); //Обновление данных о кол-ве особей
             }
         }
 
@@ -409,6 +422,7 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         {
             if (!(e.KeyChar >= '0' && e.KeyChar <= '9' || (int)e.KeyChar == 8 ))
                 e.KeyChar = (char)0;//Зпрет на ввод любых символов кроме чисел
+            if (textBox1.Text.Length > 5) e.KeyChar = (char)0;
         }
 
         //Поле "Высота"
@@ -416,6 +430,7 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         {
             if (!(e.KeyChar >= '0' && e.KeyChar <= '9' || (int)e.KeyChar == 8))
                 e.KeyChar = (char)0;//Зпрет на ввод любых символов кроме чисел
+            if (textBox2.Text.Length > 5) e.KeyChar = (char)0;
         }
 
         //Поле "Количество живых клеток"
@@ -423,6 +438,7 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         {
             if (!(e.KeyChar >= '0' && e.KeyChar <= '9' || (int)e.KeyChar == 8))
                 e.KeyChar = (char)0;//Зпрет на ввод любых символов кроме чисел
+            if (textBox4.Text.Length > 5) e.KeyChar = (char)0;
         }
 
         //Поле "Количество поколений"
@@ -430,6 +446,7 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         {
             if (!(e.KeyChar >= '0' && e.KeyChar <= '9' || (int)e.KeyChar == 8))
                 e.KeyChar = (char)0;//Зпрет на ввод любых символов кроме чисел
+            if (textBox3.Text.Length > 5) e.KeyChar = (char)0;
         }
 
         //Поле "Среднее количество особей за весь период"
@@ -448,6 +465,16 @@ namespace Курсовая_работа___Игра_Жизнь_Дж.Конвея
         private void textBox7_KeyPress(object sender, KeyPressEventArgs e)
         {
             e.KeyChar = (char)0;//Зпрет на ввод любых символов
+        }
+
+        private void правилаToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Последовательность действий:\n\n1) Для начала необходимо заполнить поля \"Ширина\" и \"Высота\", после чего нажать кнопку \"Создать мир\"." +
+                "\n\n2) Следующим шагом стоит либо расставить живые клетки при помощи мыши, либо заполнить поле \"Количество живых клеток\" и нажать кнопку \"Расставить автоматически\"." +
+                "\n\n3) Далее заполняется поле \"Количество поколений\" и если данные соответствуют условиям задачи, то программа готова к запуску и можно нажимать кнопку \"Старт\" " +
+                "и при необходимости остановить программу в процессе симуляции нажав кнопку \"Стоп\", " +
+                "а если во введённых данных ошибка или вы готовы перейти к новой симуляции, то нажать кнопку \"Очистить мир\" и ввести все данные заново." +
+                "\n\nВнимание! Не стоит сразу заполнять все пользовательские поля так как после нажатия некоторых кнопок поля могут обнулятся во избежание ошибок!");
         }
     }
 }
